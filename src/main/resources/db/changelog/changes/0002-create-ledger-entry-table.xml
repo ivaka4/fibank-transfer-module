@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0002-create-ledger-entry-table" author="fibank">
+        <createTable tableName="ledger_entry">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="account_iban" type="varchar(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transfer_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="correlation_id" type="varchar(36)"/>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ledger_entry" indexName="idx_ledger_account_iban">
+            <column name="account_iban"/>
+        </createIndex>
+        <createIndex tableName="ledger_entry" indexName="idx_ledger_created_at">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0004-create-idempotency-key-table" author="fibank">
+        <createTable tableName="idempotency_key">
+            <column name="idempotency_key" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="request_hash" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_status" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_body" type="clob">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transfer_id" type="uuid"/>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

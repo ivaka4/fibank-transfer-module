@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Seeds the four demo accounts defined in the assignment. -->
+    <changeSet id="0007-seed-demo-accounts" author="fibank">
+        <insert tableName="account">
+            <column name="iban" value="BG01FINV001"/>
+            <column name="owner_name" value="Ivan Petrov"/>
+            <column name="currency" value="USD"/>
+            <column name="balance" valueNumeric="10000.00"/>
+            <column name="version" valueNumeric="0"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+        <insert tableName="account">
+            <column name="iban" value="BG01FINV002"/>
+            <column name="owner_name" value="Maria Koleva"/>
+            <column name="currency" value="EUR"/>
+            <column name="balance" valueNumeric="5000.00"/>
+            <column name="version" valueNumeric="0"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+        <insert tableName="account">
+            <column name="iban" value="BG01FINV003"/>
+            <column name="owner_name" value="Georgi Ivanov"/>
+            <column name="currency" value="USD"/>
+            <column name="balance" valueNumeric="2500.00"/>
+            <column name="version" valueNumeric="0"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+        <insert tableName="account">
+            <column name="iban" value="BG01FINV004"/>
+            <column name="owner_name" value="Elena Todorova"/>
+            <column name="currency" value="EUR"/>
+            <column name="balance" valueNumeric="8000.00"/>
+            <column name="version" valueNumeric="0"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

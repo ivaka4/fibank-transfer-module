@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Schema (one changeset per table for clean review/rollback) -->
+    <include file="changes/0001-create-account-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/0002-create-ledger-entry-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/0003-create-transfer-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/0004-create-idempotency-key-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/0005-create-standing-order-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/0006-create-shedlock-table.xml" relativeToChangelogFile="true"/>
+
+    <!-- Seed data -->
+    <include file="changes/0007-seed-demo-accounts.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

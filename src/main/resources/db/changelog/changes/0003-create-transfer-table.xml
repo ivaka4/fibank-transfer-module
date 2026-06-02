@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0003-create-transfer-table" author="fibank">
+        <createTable tableName="transfer">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="source_iban" type="varchar(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_iban" type="varchar(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_amount" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_amount" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_currency" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_currency" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fx_rate" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="idempotency_key" type="varchar(36)"/>
+            <column name="correlation_id" type="varchar(36)"/>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="transfer" indexName="idx_transfer_source_created">
+            <column name="source_iban"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
