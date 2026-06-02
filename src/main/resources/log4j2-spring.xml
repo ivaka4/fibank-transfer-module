@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Log4j2 configuration with asynchronous loggers backed by the LMAX Disruptor.
+  AsyncRoot/AsyncLogger move log I/O off the request thread for low-latency logging.
+  The pattern includes the correlation id from the MDC (%X{correlationId}) so every
+  line of a request — including transfer attempts — is traceable end to end.
+-->
+<Configuration status="WARN">
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] [correlationId=%X{correlationId}] %logger{36} - %msg%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <AsyncLogger name="com.fibank.transfer" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="Console"/>
+        </AsyncRoot>
+    </Loggers>
+
+</Configuration>

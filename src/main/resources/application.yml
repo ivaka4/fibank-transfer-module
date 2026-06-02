@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: fibank-transfer-module
+
+  threads:
+    virtual:
+      enabled: true                 # Java 25 virtual threads for request handling
+
+  datasource:
+    url: jdbc:h2:mem:fibank;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: none                # schema is owned by Liquibase, never by Hibernate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+# --- Application-specific configuration ---
+
+fib:
+  # API key for the X-FIB-AUTH header. Injected from an environment variable;
+  # the value below is only a local-dev fallback and is overridden in docker-compose.
+  api-key: ${FIB_API_KEY:local-dev-secret-change-me}
+
+fx:
+  rate:
+    usd-to-eur: ${FX_RATE_USD_TO_EUR:0.86}
+
+transfer:
+  daily-limit: 20000
+
+standing-order:
+  # Every minute by default so the job can fire during a short test/demo session.
+  cron: ${STANDING_ORDER_CRON:0 * * * * *}
+
+idempotency:
+  ttl-hours: 24
