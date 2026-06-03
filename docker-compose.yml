@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    container_name: fibank-transfer-module
+    ports:
+      - "8080:8080"
+    environment:
+      # API key for the X-FIB-AUTH header — supplied as an environment variable,
+      # never hardcoded in source. Override by exporting FIB_API_KEY before `up`.
+      FIB_API_KEY: ${FIB_API_KEY:-supersecret-fib-api-key}
+      # Configurable FX rate (USD -> EUR).
+      FX_RATE_USD_TO_EUR: ${FX_RATE_USD_TO_EUR:-0.86}
+      # Standing-order job schedule (every minute by default so it fires during testing).
+      STANDING_ORDER_CRON: ${STANDING_ORDER_CRON:-0 * * * * *}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

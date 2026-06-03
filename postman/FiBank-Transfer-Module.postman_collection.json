@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "FiBank — Transfer & Standing Order Module",
+    "description": "Covers all endpoints of the inter-account transfer & standing-order module. Collection-level auth sends the X-FIB-AUTH API key on every request. Test scripts capture created ids into environment variables so requests can be chained.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key", "value": "X-FIB-AUTH", "type": "string" },
+      { "key": "value", "value": "{{apiKey}}", "type": "string" },
+      { "key": "in", "value": "header", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/accounts", "host": ["{{baseUrl}}"], "path": ["api", "v1", "accounts"] }
+          }
+        },
+        {
+          "name": "Get account by IBAN",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/accounts/BG01FINV001", "host": ["{{baseUrl}}"], "path": ["api", "v1", "accounts", "BG01FINV001"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transfers",
+      "item": [
+        {
+          "name": "Execute transfer (same-currency USD->USD)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('transferId', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceIban\": \"BG01FINV001\",\n  \"destinationIban\": \"BG01FINV003\",\n  \"amount\": 1000.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transfers", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transfers"] }
+          }
+        },
+        {
+          "name": "Execute transfer (cross-currency USD->EUR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('FX rate applied (0.86)', () => pm.expect(Number(pm.response.json().fxRate)).to.eql(0.86));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceIban\": \"BG01FINV001\",\n  \"destinationIban\": \"BG01FINV002\",\n  \"amount\": 1000.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transfers", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transfers"] }
+          }
+        },
+        {
+          "name": "Idempotency demo (same key, run twice)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "// Run this request twice with the same X-Idempotency-Key: the second call",
+                  "// returns the identical transfer id without moving funds again.",
+                  "pm.environment.set('idempotentTransferId', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceIban\": \"BG01FINV003\",\n  \"destinationIban\": \"BG01FINV001\",\n  \"amount\": 100.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transfers", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transfers"] }
+          }
+        },
+        {
+          "name": "Daily limit exceeded (expect 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('422 Unprocessable Entity', () => pm.response.to.have.status(422));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceIban\": \"BG01FINV001\",\n  \"destinationIban\": \"BG01FINV003\",\n  \"amount\": 25000.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transfers", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transfers"] }
+          }
+        },
+        {
+          "name": "Get transfer by id",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/transfers/{{transferId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transfers", "{{transferId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ledger",
+      "item": [
+        {
+          "name": "Query ledger (filtered + paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger?accountIban=BG01FINV001&type=DEBIT&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ledger"],
+              "query": [
+                { "key": "accountIban", "value": "BG01FINV001" },
+                { "key": "type", "value": "DEBIT" },
+                { "key": "minAmount", "value": "0", "disabled": true },
+                { "key": "maxAmount", "value": "100000", "disabled": true },
+                { "key": "dateFrom", "value": "2026-01-01T00:00:00Z", "disabled": true },
+                { "key": "dateTo", "value": "2027-01-01T00:00:00Z", "disabled": true },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Standing Orders",
+      "item": [
+        {
+          "name": "Create standing order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('standingOrderId', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceIban\": \"BG01FINV001\",\n  \"destinationIban\": \"BG01FINV003\",\n  \"amount\": 50.00,\n  \"currency\": \"USD\",\n  \"cronExpression\": \"0 * * * * *\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/standing-orders", "host": ["{{baseUrl}}"], "path": ["api", "v1", "standing-orders"] }
+          }
+        },
+        {
+          "name": "List active standing orders",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/standing-orders", "host": ["{{baseUrl}}"], "path": ["api", "v1", "standing-orders"] }
+          }
+        },
+        {
+          "name": "Get standing order by id",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/standing-orders/{{standingOrderId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "standing-orders", "{{standingOrderId}}"] }
+          }
+        },
+        {
+          "name": "Cancel standing order (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [ "pm.test('204 No Content', () => pm.response.to.have.status(204));" ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/standing-orders/{{standingOrderId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "standing-orders", "{{standingOrderId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth (negative)",
+      "item": [
+        {
+          "name": "Missing API key (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [ "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));" ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/accounts", "host": ["{{baseUrl}}"], "path": ["api", "v1", "accounts"] }
+          }
+        }
+      ]
+    }
+  ]
+}
