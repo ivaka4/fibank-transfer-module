@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,6 +50,12 @@ class TransferIntegrationTest {
 
     @Test
     void executesTransferEndToEndAndUpdatesBalancesAndLedger() throws Exception {
+        // Read balances first so the assertions are relative — robust regardless of
+        // what other tests did to the shared in-memory database.
+        BigDecimal sourceBefore = fetchAccount("BG01FINV001").balance();
+        BigDecimal destinationBefore = fetchAccount("BG01FINV003").balance();
+        BigDecimal amount = new BigDecimal("1000.00");
+
         String body = """
                 {"sourceIban":"BG01FINV001","destinationIban":"BG01FINV003","amount":1000.00}
                 """;
@@ -62,18 +69,21 @@ class TransferIntegrationTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.createdAt").exists())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.sourceAmount").value(1000.00))
                 .andExpect(jsonPath("$.sourceCurrency").value("USD"))
                 .andExpect(jsonPath("$.destinationCurrency").value("USD"));
 
-        assertThat(fetchAccount("BG01FINV001").balance()).isEqualByComparingTo("9000.00");
-        assertThat(fetchAccount("BG01FINV003").balance()).isEqualByComparingTo("3500.00");
+        assertThat(fetchAccount("BG01FINV001").balance())
+                .isEqualByComparingTo(sourceBefore.subtract(amount));
+        assertThat(fetchAccount("BG01FINV003").balance())
+                .isEqualByComparingTo(destinationBefore.add(amount));
 
+        // Ledger holds at least one DEBIT entry on the source account.
         mockMvc.perform(get("/api/v1/ledger")
                         .header(API_KEY_HEADER, API_KEY)
                         .param("accountIban", "BG01FINV001")
                         .param("type", "DEBIT"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].amount").value(1000.00))
                 .andExpect(jsonPath("$.content[0].type").value("DEBIT"));
     }
 
@@ -83,6 +93,36 @@ class TransferIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.error").value("Unauthorized"));
+    }
+
+    @Test
+    void rejectsIdempotencyKeyReuseWithDifferentPayload() throws Exception {
+        String key = UUID.randomUUID().toString();
+        // Uses account 004 as source (not 001/003 which the balance assertions rely on);
+        // same key, different amount -> different fingerprint -> conflict.
+        String firstPayload = """
+                {"sourceIban":"BG01FINV004","destinationIban":"BG01FINV002","amount":10.00}
+                """;
+        String differentPayload = """
+                {"sourceIban":"BG01FINV004","destinationIban":"BG01FINV002","amount":20.00}
+                """;
+
+        // First use of the key succeeds.
+        mockMvc.perform(post("/api/v1/transfers")
+                        .header(API_KEY_HEADER, API_KEY)
+                        .header("X-Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(firstPayload))
+                .andExpect(status().isCreated());
+
+        // Same key, different body -> 409 Conflict.
+        mockMvc.perform(post("/api/v1/transfers")
+                        .header(API_KEY_HEADER, API_KEY)
+                        .header("X-Idempotency-Key", key)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(differentPayload))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
     }
 
     private AccountResponse fetchAccount(String iban) throws Exception {
