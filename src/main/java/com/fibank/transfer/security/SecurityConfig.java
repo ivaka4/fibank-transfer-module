@@ -30,9 +30,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**", "/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // allow H2 console iframe
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authEntryPoint))
                 .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(correlationIdFilter, ApiKeyAuthFilter.class);

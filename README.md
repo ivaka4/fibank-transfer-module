@@ -173,6 +173,8 @@ curl -X POST http://localhost:8080/api/v1/transfers \
 - **FX converter tests** cover USD↔EUR conversion and the same-currency no-op.
 - **Integration test** (`TransferIntegrationTest`, `@SpringBootTest` + MockMvc) exercises the full
   transfer flow end-to-end through the security filter, controller, service and persistence.
+- **Concurrency test** (`ConcurrentTransferTest`) fires many simultaneous transfers from one account
+  and asserts money conservation (no lost updates) under real contention.
 
 ---
 
@@ -180,10 +182,3 @@ curl -X POST http://localhost:8080/api/v1/transfers \
 
 `postman/` contains a collection and environment covering all endpoints (plus idempotency,
 daily-limit and unauthorized scenarios). Import both, select the *FiBank — Local* environment and run.
-
----
-
-## Database console
-
-H2 console is available at http://localhost:8080/h2-console
-(JDBC URL `jdbc:h2:mem:fibank`, user `sa`, empty password).

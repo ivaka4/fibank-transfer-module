@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -54,6 +55,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IdempotencyConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(BusinessException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    /** Unknown path / missing static resource -> 404 (instead of falling through to 500). */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(NoResourceFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Resource not found", request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
